@@ -72,26 +72,15 @@ def shape_dict_arr(dimension: int):
             
     return shapes, texts
 
-# Request Thread Optimization
-def create_request_threads(requests, seperations: int):
-    threaded_requests = []
-    print(range(len(requests[0])))
-    
-    j = 0
-    for i in range(len(requests)):
-        if i % seperations == 0:
-            threaded_requests.append([])
-            j += 1 if i != 0 else 0
-        
-        threaded_requests[j].append(requests[i])
-    
-    return threaded_requests
-
 
 ##### Main Function #####
 if __name__ == '__main__':
+    ##### Inputs #####
+    dimension = int(input("Input a dimension for the square (must be a single integer greater than or equal to 1): "))
     
     ##### Credential init #####
+    print("Creating Credentials...")
+    
     if os.path.exists('token.json'):
         CREDS = Credentials.from_authorized_user_file('token.json', SCOPES)
         
@@ -114,7 +103,7 @@ if __name__ == '__main__':
         # Constants
         PAGE_ID = gen_uiid()
 
-        shapes, texts = shape_dict_arr(2)
+        shapes, texts = shape_dict_arr(dimension=dimension)
         
         slide_requests = [
             {
@@ -126,19 +115,34 @@ if __name__ == '__main__':
             ##### Adding Elements for Slides ##### 
         ]
         
-        
-        threaded = create_request_threads(requests=shapes, seperations=60)
-        
         ##### Execute Slide Creation Request #####
-        response = service.presentations().batchUpdate(presentationId=PRESENTATION_ID, body={'requests': slide_requests}).execute()
+        # TODO:
+            # Make it more effective
+                # Find a way to bypass the google api request limit
+                # Increase quota?
+                # Make the requests inexpensive
+                    # Expensive read requests are 60 per minute while regular are 600
+        """About the time.sleep: 
+            Google API requesting is limited to 60 per minute, this includes body requests, meaning I can't split the whole request into
+            smaller sizes of requests. So in order to work around this, there is a second wait between each request. This is really bad
+            and inefficient however. This means a grid of size 100 will take about 166 minutes, or 2.7 hours. And thats just creating the grid, 
+            we also need to create the texts for each grid, so that doubles it, taking about 5.4 hours total. 
+                I'll see what I can do to try and make it more effective.
+        """
         
-        for request in shapes:
+        print("Adding google slide...")
+        response = service.presentations().batchUpdate(presentationId=PRESENTATION_ID, body={'requests': slide_requests}).execute()
+        print("\tSlide Request Done!")
+        time.sleep(1)
+        
+        print("Adding shapes and texts...")
+        requests = shapes + texts
+        for request in requests:
             response = service.presentations().batchUpdate(presentationId=PRESENTATION_ID, body={'requests': request}).execute()
             time.sleep(1)
+            print(f"\tRequest {requests.index(request) + 1} done!")
             
-        for request in texts:
-            response = service.presentations().batchUpdate(presentationId=PRESENTATION_ID, body={'requests': request}).execute()
-            time.sleep(1)
+        print("Done!")
         
     except HttpError as error:
         print(f"An error has occurred: {error}")
