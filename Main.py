@@ -73,6 +73,19 @@ def shape_dict_arr(dimension: int):
     return shapes, texts
 
 # Request Thread Optimization
+def create_request_threads(requests, seperations: int):
+    threaded_requests = []
+    print(range(len(requests[0])))
+    
+    j = 0
+    for i in range(len(requests)):
+        if i % seperations == 0:
+            threaded_requests.append([])
+            j += 1 if i != 0 else 0
+        
+        threaded_requests[j].append(requests[i])
+    
+    return threaded_requests
 
 
 ##### Main Function #####
@@ -101,7 +114,7 @@ if __name__ == '__main__':
         # Constants
         PAGE_ID = gen_uiid()
 
-        shapes, texts = shape_dict_arr(7)
+        shapes, texts = shape_dict_arr(2)
         
         slide_requests = [
             {
@@ -112,6 +125,9 @@ if __name__ == '__main__':
             }
             ##### Adding Elements for Slides ##### 
         ]
+        
+        
+        threaded = create_request_threads(requests=shapes, seperations=60)
         
         ##### Execute Slide Creation Request #####
         response = service.presentations().batchUpdate(presentationId=PRESENTATION_ID, body={'requests': slide_requests}).execute()
