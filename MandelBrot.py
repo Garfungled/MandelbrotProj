@@ -15,6 +15,10 @@ def mandelBrot(z_0: complex, max_iterations: int):
     
     return (iteration, magnitude)
 
+def gradient(iterations: int):
+    #return a color from a color gradient based on iteration
+    pass
+
 """
 General idea of what the parameters should be:
     dimension = int(input("Dimension: "))
