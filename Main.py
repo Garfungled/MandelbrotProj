@@ -101,7 +101,8 @@ def shape_request_arr(dimension: int, mandel_info, max_iterations: int, with_tex
             # Complex
             complex_number = complex_numbers[j][i]
             complex_number_string = str(complex_number.real) + ("+" if complex_number.imag >= 0 else "") + str(complex_number.imag) + "i"
-            curr_color = MandelBrot.mandel_color(iterations[j][i], max_iterations)
+            curr_color = MandelBrot.colorful_mandel(iterations[j][i], max_iterations, .1)
+            #curr_color = MandelBrot.mandel_color(iterations[j][i], max_iterations)
             
             # Size
             size_x = 10/dimension
