@@ -13,17 +13,17 @@ def mandelBrot(z_0: complex, max_iterations: int):
     magnitude = 0
     z_n = complex(0, 0)
     
-    while iteration < max_iterations and magnitude < 2:
+    while iteration < max_iterations+1 and magnitude < 2:
         iteration += 1
         z_n = (z_n * z_n) + z_0
         magnitude = abs(z_n)
     
-    return (iteration, magnitude)
+    return (iteration-1, magnitude)
 
 
 # Change to: (a + b * cos(6.28318*(c*t+d)))*1.3 -> vect3
     # t float: frac(sn + 0.5)
-        # sn: (iteration)/(max_iterations) * colorfullness
+        # sn: iteration/max_iterations * colorfullness
             # colorfullness int: any num
     # a vect3: vect3(.5)
         # vect3(n) = (n, n, n)
@@ -45,7 +45,7 @@ def colorful_mandel(iteration: int, max_iteration: int, colorfulness: int):
     b = (0.5, 0.5, 0.5)
     c = (1, 1, 1)
     d = (0, 0.1, 0.2)
-    sn = iteration*colorfulness/max_iteration
+    sn = iteration/(max_iteration * colorfulness)
     t = frac(sn + 0.5)
     
     return clamp_col(scale_vec(add_vec(a, dot_vec(b, cos_vec(scale_vec(scale=6.28318, vec=add_vec(scale_vec(c, t), d))))), 1.3))

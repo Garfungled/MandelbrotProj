@@ -20,7 +20,7 @@ The main program for creating the slides
 
 ##### Constants #####
 SCOPES = ['https://www.googleapis.com/auth/presentations']
-PRESENTATION_ID = "1mgGhGO_qwuOOW2I86mG2h2ymKsm9yFHDCCj8m1HSA4E"
+PRESENTATION_ID = "1M-cChUTHO8D7UCupPniYCLdE0lqjVSHfudHt2-DKEfQ"
 CREDS = None
 
 
@@ -96,17 +96,31 @@ def shape_request_arr(dimension: int, mandel_info, max_iterations: int, with_tex
     iterations = mandel_info[1]
     magnitudes = mandel_info[2]
     
+    # Color map
+    color_map = [[]]
+    
     for i in range(dimension):
         for j in range(dimension):
             # Complex
+            iteration = iterations[j][i]
             complex_number = complex_numbers[j][i]
             complex_number_string = str(complex_number.real) + ("+" if complex_number.imag >= 0 else "") + str(complex_number.imag) + "i"
-            curr_color = MandelBrot.colorful_mandel(iterations[j][i], max_iterations, .1)
-            #curr_color = MandelBrot.mandel_color(iterations[j][i], max_iterations)
+            curr_color = MandelBrot.colorful_mandel(iteration, max_iterations, 2)
+            #curr_color = MandelBrot.mandel_color(iteration, max_iterations)
+            
+            for color in color_map:
+                inMap = curr_color in color
+                if inMap:
+                    break
+            
+            if not inMap:
+                color_map.append([curr_color, iteration])
+            
+                
             
             # Size
-            size_x = 10/dimension
-            size_y = 5.63/dimension
+            size_x = 5/dimension
+            size_y = 5/dimension
             shape_id = gen_uiid()
             
             # Array appending
@@ -118,7 +132,7 @@ def shape_request_arr(dimension: int, mandel_info, max_iterations: int, with_tex
             if with_text:
                 texts.append({'insertText': {'objectId': shape_id, 'text': complex_number_string}})
             
-    return shapes, shape_props, texts
+    return shapes, shape_props, texts, color_map
 
 
 ##### Main Function #####
@@ -127,6 +141,7 @@ if __name__ == '__main__':
     complex_dimension = float(D(input("Input a dimension for the square (must be a single integer greater than or equal to 1): ")))
     step = D(input("Input a step for the Mandelbrot function (positive real number): "))
     max_iterations = int(input("Input a max iteration for the Mandelbrot function (a positive integer): "))
+    text_bool = True if input("Text? (y/n): ") == "y" else False
     
     shape_dimension = math.ceil(D(complex_dimension)/step) * 2 + math.ceil(D(complex_dimension)/step) % 2
     
@@ -159,7 +174,7 @@ if __name__ == '__main__':
         print("Creating Mandelbrot set...")
         mandel_info = MandelBrot.getMandelSet(complex_dimension, step, max_iterations) 
         
-        shapes, shape_props, texts = shape_request_arr(shape_dimension, mandel_info, max_iterations, False)
+        shapes, shape_props, texts, color_map = shape_request_arr(shape_dimension, mandel_info, max_iterations, text_bool)
         
         slide_requests = [
             {
@@ -196,8 +211,16 @@ if __name__ == '__main__':
         for request in requests:
             response = service.presentations().batchUpdate(presentationId=PRESENTATION_ID, body={'requests': request}).execute()
             
+            time.sleep(1)
             print(f"\tRequest {requests.index(request) + 1} done!")
-            
+        
+        # Color map
+        print("Here is the color map for the image: ")
+        for color in color_map:
+            if color_map.index(color) == 0:
+                continue
+            print(f"color: {(round(color[0][0] * 255, 2), round(color[0][1] * 255, 2), round(color[0][2] * 255, 2))}, iteration: {color[1]}")
+
         print("Done!")
         
     except HttpError as error:
